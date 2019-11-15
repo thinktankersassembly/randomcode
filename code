@@ -1,0 +1,98 @@
+void WorkPlan::add(Task *task)
+{
+    Task *temp;
+    temp = new Task;
+    temp->name = new char[strlen(task->name)];
+    strcpy(temp->name,task->name);
+    temp->day = task->day;
+    temp->time = task->time;
+    temp->priority = task->priority;
+
+    if(head == NULL){                               // for the very first node
+        head = temp;
+        temp->counterpart=NULL;
+        temp->next=temp;
+        temp->previous=temp;
+    }
+    else{
+        Task *ptr;
+        ptr = head;
+        
+        if(ptr->day > temp->day){                  //If given day's smaller than head (then it's probably unexist)
+            temp->previous = ptr->previous;
+            temp->next = ptr;
+            ptr->previous = temp;
+            temp->counterpart = NULL;
+			head = temp;
+
+        }else if(ptr->day < temp->day){                  //if given day's greater than head
+            while(ptr->next!=head){
+                if(ptr->day < temp->day && (ptr->next)->day > temp->day)       //If new node's in between
+                {
+                    temp->next = ptr->next;
+                    temp->previous = ptr;
+                    ptr->next = temp;
+                    (ptr->next)->previous = temp;
+                    temp->counterpart = NULL;
+                }
+                if(temp->day == ptr->day) {               //If given day's the same 
+                    if (temp->time < ptr->time) {
+                        temp->next = ptr->next;
+                        temp->previous = ptr->previous;
+                        temp->counterpart = ptr;
+                        (ptr->next)->previous = temp;
+                        (ptr->previous)->next = temp;
+                        ptr->next = NULL;
+                        ptr->previous = NULL;
+                        if (head == ptr){
+                        head = temp;
+                        }
+                    }
+			        while(ptr->counterpart!=NULL && ptr->counterpart->time <= temp->time){
+				        ptr = ptr->counterpart;
+			        }
+                    if(ptr->counterpart == NULL || ptr->counterpart->time > temp->time){
+                        temp->counterpart = ptr->counterpart;
+                        ptr->counterpart = temp;
+                        temp->next = NULL;
+                        temp->previous = NULL;
+			        }	
+                    if (temp->time == ptr->time) {
+                        if (temp->priority < ptr->priority) {
+                            checkAvailableNextTimesFor(temp);
+                            temp->day = getUsableDay();
+                            temp->time = getUsableTime();
+                            add(temp);
+                        } else {
+                            //swap
+                            char *ptr1;
+                            int preo;
+                            preo = temp->priority;
+                            ptr1 = temp->name;
+                            temp->priority = ptr->priority;
+                            temp->name = ptr->name;
+                            ptr->priority = preo;
+                            ptr->name = ptr1;
+                            checkAvailableNextTimesFor(ptr);
+                            temp->day = getUsableDay();
+                            temp->time = getUsableTime();
+                            add(temp);
+                            delete[] temp->name;
+                            delete temp;
+                        }
+                    }
+                }
+                if(ptr->day < temp->day && ptr->next == head)               //If new node's greater than every other node
+                {
+                    temp->next = head;
+                    temp->previous = ptr;
+                    ptr->next = temp;
+                    head->previous= temp;
+                    temp->counterpart = NULL;
+                }
+                ptr = ptr->next;
+            }
+        }
+    }
+cout << temp->name << temp->day << temp->time << temp->priority << endl;
+}
